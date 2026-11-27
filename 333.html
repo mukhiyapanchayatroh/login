@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#062f5d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="रोह पंचायत">
+<title>रोह पंचायत App | विपेन्द्र प्रसाद सिन्हा (दिपु मेहता)</title>
+<link id="pwaManifest" rel="manifest" href="">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;font-family:'Mukta',sans-serif;background:#eef3f9;color:#1e293b;overflow-x:hidden;min-height:100vh}
+:root{--primary:#0756a8;--primary-dark:#053469;--accent:#f5b400;--bg:#eef3f9;--card:#ffffff;--border:#e2e8f0}
+
+/* App Splash Screen */
+.app-splash{position:fixed;inset:0;z-index:999;background:linear-gradient(160deg,#052c59 0%,#0756a8 60%,#0a74da 100%);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .35s ease,visibility .35s ease}
+.app-splash.hide{opacity:0;visibility:hidden;pointer-events:none}
+.splash-logo{width:84px;height:84px;border-radius:24px;background:#fff;color:#0756a8;display:grid;place-items:center;font-size:34px;font-weight:900;box-shadow:0 15px 35px rgba(0,0,0,0.3);animation:pulseLogo 1.6s infinite ease-in-out}
+@keyframes pulseLogo{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+/* Strict Auth Lock State - Hides entire app shell until logged in */
+body.auth-locked #appShell{display:none!important}
+body:not(.auth-locked) #authWall{display:none!important}
+
+/* Auth Wall (Full Screen App Lock UI) */
+#authWall{min-height:100vh;background:linear-gradient(165deg,#052954 0%,#0756a8 48%,#eef3f9 48.2%,#eef3f9 100%);display:flex;flex-direction:column;justify-content:center;padding:20px 16px}
+.auth-card{background:#fff;border-radius:26px;padding:26px 22px;box-shadow:0 20px 45px rgba(5,41,84,0.18);width:100%;max-width:410px;margin:0 auto;border:1px solid rgba(255,255,255,0.8)}
+.auth-screen{display:none}.auth-screen.active{display:block;animation:slideUp .25s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* App Shell Layout */
+#appShell{padding-bottom:84px;max-width:1100px;margin:0 auto;background:#f4f7fb;min-height:100vh;box-shadow:0 0 40px rgba(0,0,0,0.05)}
+.app-topbar{position:sticky;top:0;z-index:80;background:linear-gradient(135deg,#06356b,#0756a8);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 16px rgba(6,53,107,0.22)}
+.app-page{display:none;padding:16px;animation:fadePage .2s ease}
+.app-page.active{display:block}
+@keyframes fadePage{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* App Cards & Grids */
+.app-card{background:#fff;border-radius:20px;padding:18px;border:1px solid #e5ecf4;box-shadow:0 4px 14px rgba(15,23,42,0.04)}
+.app-icon-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:400px){.app-icon-grid{grid-template-columns:repeat(3,1fr)}}
+.app-tile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:10px 4px;border-radius:16px;transition:transform .12s,background .15s}
+.app-tile:active{transform:scale(0.94);background:#e8f1fb}
+.tile-icon{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:22px;box-shadow:0 4px 10px rgba(0,0,0,0.06)}
+.tile-label{font-size:12px;font-weight:700;color:#1e293b;line-height:1.2}
+
+/* Notice Ticker */
+.notice-strip{background:#fff8eb;border:1px solid #fde68a;border-radius:14px;padding:8px 12px;display:flex;align-items:center;gap:10px;overflow:hidden}
+.notice-badge{background:#dc2626;color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:8px;shrink:0;white-space:nowrap}
+.marquee-wrap{overflow:hidden;white-space:nowrap;flex:1}
+.marquee-text{display:inline-block;padding-left:100%;animation:marqueeAnim 22s linear infinite;font-size:13px;font-weight:700;color:#78350f}
+@keyframes marqueeAnim{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+
+/* Inputs & Buttons */
+.app-input{width:100%;padding:13px 15px;border:1.5px solid #dbe4ee;border-radius:14px;background:#f8fafc;color:#0f172a;font-size:15px;outline:none;transition:all .2s}
+.app-input:focus{border-color:#0756a8;background:#fff;box-shadow:0 0 0 3px rgba(7,86,168,0.12)}
+.btn-primary{width:100%;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,#0756a8,#0b6fc4);color:#fff;font-weight:800;font-size:15px;border:0;box-shadow:0 6px 16px rgba(7,86,168,0.25);transition:transform .12s}
+.btn-primary:active{transform:scale(0.98)}
+.status-msg{display:none;padding:11px 14px;border-radius:12px;font-size:13px;font-weight:700;margin-top:12px}
+.status-msg.show{display:block}
+
+/* Bottom Navigation Bar */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:1100px;background:#ffffff;border-top:1px solid #e2e8f0;display:flex;justify-content:space-around;padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:90;box-shadow:0 -4px 20px rgba(0,0,0,0.06)}
+.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:#64748b;font-size:11px;font-weight:700;background:none;border:0;padding:4px 0}
+.nav-tab i{font-size:18px;transition:transform .15s}
+.nav-tab.active{color:#0756a8}
+.nav-tab.active i{transform:translateY(-2px)}
+
+/* Floating AI Button */
+.ai-fab{position:fixed;right:16px;bottom:82px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#0756a8,#0ea5e9);color:#fff;font-size:22px;display:grid;place-items:center;box-shadow:0 8px 22px rgba(7,86,168,0.35);z-index:85;border:2px solid #fff}
+
+/* Modals */
+.modal{display:none;position:fixed;inset:0;background:rgba(2,18,38,0.75);backdrop-filter:blur(3px);z-index:120;align-items:center;justify-content:center;padding:16px}
+.modal.show{display:flex}
+.chat-bubble{padding:10px 14px;border-radius:16px;margin-bottom:8px;font-size:14px;line-height:1.45;max-width:85%}
+.gallery-img{width:100%;height:190px;object-fit:cover;border-radius:14px;cursor:pointer}
+</style>
+</head>
+<body class="auth-locked">
+
+<!-- 1. APP SPLASH SCREEN -->
+<div id="appSplash" class="app-splash">
+  <div class="splash-logo">रोह</div>
+  <h1 class="text-2xl font-black mt-5 tracking-wide">रोह पंचायत</h1>
+  <p class="text-blue-200 text-sm mt-1">डिजिटल नागरिक सेवा ऐप • 2026</p>
+  <div class="w-8 h-8 border-3 border-white/30 border-t-amber-400 rounded-full animate-spin mt-6"></div>
+</div>
+
+<!-- 2. STRICT APP LOCK WALL (Shows First When App Opens) -->
+<div id="authWall">
+  <div class="text-center text-white mb-6">
+    <div class="w-16 h-16 rounded-2xl bg-white text-[#0756a8] font-black text-2xl grid place-items-center mx-auto shadow-lg">रोह</div>
+    <h1 class="text-2xl font-black mt-3">रोह पंचायत ऐप</h1>
+    <p class="text-blue-100 text-xs mt-1">विपेन्द्र प्रसाद सिन्हा (दिपु मेहता)</p>
+  </div>
+
+  <div class="auth-card">
+    <!-- Screen A: Lock Chooser -->
+    <div id="screenChooser" class="auth-screen active">
+      <div class="text-center mb-5">
+        <span class="inline-block px-3 py-1 rounded-full bg-blue-50 text-[#0756a8] text-xs font-extrabold">🔒 सुरक्षित ऐप लॉक</span>
+        <h2 class="text-xl font-black text-slate-800 mt-2">लॉगिन प्रकार चुनें</h2>
+        <p class="text-xs text-slate-500 mt-1">ऐप की सेवाओं का उपयोग करने के लिए पहले लॉगिन करें</p>
+      </div>
+      <div class="space-y-3">
+        <button onclick="switchAuthScreen('screenUserLogin')" class="btn-primary flex items-center justify-center gap-2">
+          <i class="fa-solid fa-user"></i> नागरिक लॉगिन (Citizen Login)
+        </button>
+        <button onclick="switchAuthScreen('screenRegister')" class="w-full py-3.5 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-extrabold text-sm flex items-center justify-center gap-2">
+          <i class="fa-solid fa-user-plus"></i> नया नागरिक अकाउंट बनाएं
+        </button>
+        <div class="relative py-2 text-center">
+          <span class="bg-white px-3 text-xs text-slate-400 font-bold relative z-10">अधिकारी / एडमिन</span>
+          <div class="border-t border-slate-200 absolute inset-x-0 top-1/2"></div>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="openAdminScreen('Admin')" class="py-2.5 px-2 rounded-xl bg-slate-800 text-white font-bold text-xs">🔐 Admin</button>
+          <button onclick="openAdminScreen('प्रशासक')" class="py-2.5 px-2 rounded-xl bg-indigo-700 text-white font-bold text-xs">प्रशासक</button>
+          <button onclick="openAdminScreen('अधिकारी')" class="py-2.5 px-2 rounded-xl bg-teal-700 text-white font-bold text-xs">अधिकारी</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen B: Citizen Login -->
+    <div id="screenUserLogin" class="auth-screen">
+      <button onclick="switchAuthScreen('screenChooser')" class="text-xs font-bold text-slate-500 mb-3 flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> वापस</button>
+      <h2 class="text-2xl font-black text-slate-800">नागरिक लॉगिन</h2>
+      <p class="text-xs text-slate-500 mt-1 mb-5">अपना रजिस्टर्ड ईमेल और पासवर्ड डालें</p>
+      <div class="space-y-3">
+        <input id="userEmail" class="app-input" type="email" placeholder="ईमेल (Email)">
+        <input id="userPassword" class="app-input" type="password" placeholder="पासवर्ड (Password)">
+        <button onclick="handleUserLogin()" class="btn-primary">ऐप अनलॉक करें →</button>
+      </div>
+      <div class="flex justify-between items-center mt-4 text-xs font-bold">
+        <button onclick="resetUserPassword()" class="text-blue-600">पासवर्ड भूल गए?</button>
+        <button onclick="switchAuthScreen('screenRegister')" class="text-emerald-600">नया अकाउंट बनाएं</button>
+      </div>
+      <div id="userLoginStatus" class="status-msg"></div>
+    </div>
+
+    <!-- Screen C: Citizen Register -->
+    <div id="screenRegister" class="auth-screen">
+      <button onclick="switchAuthScreen('screenChooser')" class="text-xs font-bold text-slate-500 mb-3 flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> वापस</button>
+      <h2 class="text-2xl font-black text-slate-800">नया अकाउंट बनाएं</h2>
+      <p class="text-xs text-slate-500 mt-1 mb-4">डिजिटल नागरिक कार्ड और सेवाओं के लिए रजिस्टर करें</p>
+      <div class="space-y-3">
+        <input id="regName" class="app-input" placeholder="आपका पूरा नाम">
+        <input id="regMobile" class="app-input" type="tel" placeholder="मोबाइल नंबर">
+        <input id="regEmail" class="app-input" type="email" placeholder="ईमेल (Email)">
+        <input id="regPassword" class="app-input" type="password" placeholder="पासवर्ड (कम से कम 6 अक्षर)">
+        <button onclick="handleRegister()" class="w-full py-3.5 rounded-2xl bg-emerald-600 text-white font-extrabold shadow">अकाउंट बनाएं और प्रवेश करें</button>
+      </div>
+      <div id="registerStatus" class="status-msg"></div>
+    </div>
+
+    <!-- Screen D: Admin Login -->
+    <div id="screenAdminLogin" class="auth-screen">
+      <button onclick="switchAuthScreen('screenChooser')" class="text-xs font-bold text-slate-500 mb-3 flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> वापस</button>
+      <h2 id="adminLoginHeading" class="text-2xl font-black text-slate-800">Admin लॉगिन</h2>
+      <p class="text-xs text-slate-500 mt-1 mb-5">केवल अधिकृत एडमिन और अधिकारियों के लिए</p>
+      <div class="space-y-3">
+        <input id="userInput" class="app-input" type="email" placeholder="Admin Email">
+        <input id="passInput" class="app-input" type="password" placeholder="Admin Password">
+        <button onclick="handleAdminLogin()" class="w-full py-3.5 rounded-2xl bg-slate-900 text-white font-extrabold shadow">कंट्रोल पैनल खोलें</button>
+      </div>
+      <div id="loginStatus" class="status-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. MAIN UNLOCKED MOBILE APP SHELL -->
+<div id="appShell">
+  <!-- App Top Bar -->
+  <header class="app-topbar">
+    <div class="flex items-center gap-3" onclick="openAppPage('home')">
+      <div class="w-10 h-10 rounded-xl bg-white text-[#0756a8] font-black text-lg grid place-items-center shadow">रो</div>
+      <div>
+        <div class="font-black text-base leading-tight">रोह पंचायत</div>
+        <div class="text-[11px] text-blue-200" id="topUserGreeting">स्वागत है</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="installAppBtn" onclick="installPWA()" class="hidden px-3 py-1.5 rounded-xl bg-amber-400 text-slate-900 font-black text-xs shadow">📲 Install</button>
+      <button onclick="openAppPage('notificationsPage')" class="w-9 h-9 rounded-xl bg-white/15 grid place-items-center relative">
+        <i class="fa-solid fa-bell text-sm"></i>
+      </button>
+      <button onclick="logoutApp()" class="px-3 py-1.5 rounded-xl bg-red-500/90 text-white font-bold text-xs">
+        <i class="fa-solid fa-right-from-bracket"></i> लॉक
+      </button>
+    </div>
+  </header>
+
+  <!-- PAGE 1: APP HOME -->
+  <main id="home" class="app-page active space-y-4">
+    <!-- Live Notice Strip -->
+    <div class="notice-strip">
+      <span class="notice-badge">📢 सूचना</span>
+      <div class="marquee-wrap">
+        <span id="mainNotice" class="marquee-text">📢 Roh Panchayat Notice : मतदाता सूची, PACS सूची महत्वपूर्ण जानकारी में उपलब्ध है।</span>
+      </div>
+    </div>
+
+    <!-- Leader Banner Card -->
+    <div class="rounded-3xl bg-gradient-to-br from-[#06356b] via-[#0756a8] to-[#0b74da] text-white p-5 shadow-lg relative overflow-hidden">
+      <div class="relative z-10 flex items-center gap-4">
+        <div class="w-16 h-16 rounded-2xl bg-white/15 border border-white/30 overflow-hidden shrink-0 grid place-items-center">
+          <img id="profilePic" src="" alt="Leader" class="hidden w-full h-full object-cover">
+          <i id="defaultIcon" class="fa-solid fa-user-tie text-3xl text-white"></i>
+        </div>
+        <div class="min-w-0">
+          <span class="text-[10px] font-extrabold uppercase tracking-wider bg-amber-400 text-slate-900 px-2 py-0.5 rounded-md">रोह पंचायत • 2026</span>
+          <h2 class="text-xl font-black mt-1 truncate">विपेन्द्र प्रसाद सिन्हा</h2>
+          <p class="text-amber-300 font-bold text-sm">उर्फ (दिपु मेहता)</p>
+        </div>
+      </div>
+      <p id="mainShayari" class="mt-4 text-sm text-blue-50 bg-white/10 p-3 rounded-xl border border-white/15 font-semibold">रोह पंचायत का सम्मान, दिपु मेहता का अभिमान।</p>
+      <div class="grid grid-cols-2 gap-2.5 mt-4">
+        <a href="https://wa.me/917488417922" target="_blank" class="py-2.5 rounded-xl bg-emerald-500 text-white font-extrabold text-xs text-center shadow"><i class="fa-brands fa-whatsapp"></i> WhatsApp संपर्क</a>
+        <a href="tel:+917488417922" class="py-2.5 rounded-xl bg-white text-[#0756a8] font-extrabold text-xs text-center shadow"><i class="fa-solid fa-phone"></i> कॉल करें</a>
+      </div>
+    </div>
+
+    <!-- App Services Grid (Launcher Style) -->
+    <div class="app-card">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="font-black text-base text-slate-800">पंचायत सेवाएं (Apps)</h3>
+        <span class="text-xs text-blue-600 font-bold">सभी सुविधाएं</span>
+      </div>
+      <div class="app-icon-grid">
+        <button onclick="openAppPage('userPortal')" class="app-tile">
+          <div class="tile-icon bg-blue-100 text-blue-700"><i class="fa-solid fa-id-card"></i></div>
+          <span class="tile-label">मेरा कार्ड</span>
+        </button>
+        <button onclick="openAppPage('suggestions')" class="app-tile">
+          <div class="tile-icon bg-rose-100 text-rose-600"><i class="fa-solid fa-bullhorn"></i></div>
+          <span class="tile-label">शिकायत दर्ज</span>
+        </button>
+        <button onclick="openAppPage('schemeChecker')" class="app-tile">
+          <div class="tile-icon bg-amber-100 text-amber-700"><i class="fa-solid fa-landmark"></i></div>
+          <span class="tile-label">योजना चेकर</span>
+        </button>
+        <button onclick="openAppPage('development')" class="app-tile">
+          <div class="tile-icon bg-emerald-100 text-emerald-700"><i class="fa-solid fa-road"></i></div>
+          <span class="tile-label">विकास कार्य</span>
+        </button>
+        <button onclick="openAppPage('pdfs')" class="app-tile">
+          <div class="tile-icon bg-red-100 text-red-600"><i class="fa-solid fa-file-pdf"></i></div>
+          <span class="tile-label">PDF सूची</span>
+        </button>
+        <button onclick="openAppPage('survey')" class="app-tile">
+          <div class="tile-icon bg-purple-100 text-purple-700"><i class="fa-solid fa-square-poll-vertical"></i></div>
+          <span class="tile-label">जन सर्वेक्षण</span>
+        </button>
+        <button onclick="openAppPage('publicReports')" class="app-tile">
+          <div class="tile-icon bg-cyan-100 text-cyan-700"><i class="fa-solid fa-clipboard-check"></i></div>
+          <span class="tile-label">जनता रिपोर्ट</span>
+        </button>
+        <button onclick="openAppPage('gallery')" class="app-tile">
+          <div class="tile-icon bg-indigo-100 text-indigo-700"><i class="fa-solid fa-images"></i></div>
+          <span class="tile-label">फोटो गैलरी</span>
+        </button>
+        <button onclick="openAppPage('videoGallery')" class="app-tile">
+          <div class="tile-icon bg-orange-100 text-orange-600"><i class="fa-solid fa-circle-play"></i></div>
+          <span class="tile-label">वीडियो</span>
+        </button>
+        <button onclick="openAppPage('musicPlayer')" class="app-tile">
+          <div class="tile-icon bg-pink-100 text-pink-600"><i class="fa-solid fa-music"></i></div>
+          <span class="tile-label">ऑडियो/गाना</span>
+        </button>
+        <button onclick="openAppPage('about')" class="app-tile">
+          <div class="tile-icon bg-teal-100 text-teal-700"><i class="fa-solid fa-circle-info"></i></div>
+          <span class="tile-label">परिचय/संकल्प</span>
+        </button>
+        <button onclick="openAppPage('updates')" class="app-tile">
+          <div class="tile-icon bg-yellow-100 text-yellow-700"><i class="fa-solid fa-sparkles"></i></div>
+          <span class="tile-label">New Update</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Upcoming Event & Support -->
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div class="app-card">
+        <div class="text-xs font-extrabold text-blue-600">📅 आगामी कार्यक्रम</div>
+        <p id="mainEvent" class="font-bold text-slate-800 mt-1.5 text-sm">जल्द अपडेट होगा।</p>
+      </div>
+      <div class="app-card flex items-center justify-between gap-3">
+        <div>
+          <div class="text-xs font-extrabold text-emerald-600">👍 जन समर्थन</div>
+          <div id="voteCount" class="font-black text-slate-800 text-base mt-0.5">Total Support: 0</div>
+        </div>
+        <button onclick="vote()" class="px-4 py-2.5 rounded-xl bg-[#0756a8] text-white font-extrabold text-xs shrink-0">Support करें</button>
+      </div>
+    </div>
+
+    <!-- External Links -->
+    <div class="app-card space-y-2.5">
+      <h3 class="font-black text-sm text-slate-700">महत्वपूर्ण सरकारी एवं पंचायत लिंक</h3>
+      <a href="https://mukhiyapanchayatroh.github.io/pdf.html/" target="_blank" class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 font-bold text-sm">
+        <span>📑 मतदाता एवं PACS सूची देखें</span><i class="fa-solid fa-arrow-up-right-from-square text-blue-600"></i>
+      </a>
+      <a href="https://mukhiyapanchayatroh.github.io/AADI-TECH-HUB-ROH/" target="_blank" class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 font-bold text-sm">
+        <span>🌐 Aadi Tech Hub शिकायत पोर्टल</span><i class="fa-solid fa-arrow-up-right-from-square text-blue-600"></i>
+      </a>
+    </div>
+
+    <!-- Team Section -->
+    <div class="app-card">
+      <h3 class="font-black text-base text-slate-800 mb-3">हमारी टीम</h3>
+      <div id="teamContainer" class="grid sm:grid-cols-3 gap-3"></div>
+    </div>
+  </main>
+
+  <!-- PAGE 2: CITIZEN DIGITAL CARD & PROFILE -->
+  <section id="userPortal" class="app-page space-y-4">
+    <div id="downloadableCitizenCard" class="rounded-3xl border-2 border-amber-300 bg-gradient-to-br from-[#052954] via-[#0756a8] to-[#0b7891] text-white p-5 shadow-xl">
+      <div class="flex items-center gap-3 border-b border-white/20 pb-3">
+        <div class="w-11 h-11 rounded-xl bg-white text-[#0756a8] font-black text-lg grid place-items-center">रोह</div>
+        <div>
+          <div class="text-[10px] tracking-widest text-amber-300 font-black">ROH PANCHAYAT • 2026</div>
+          <h3 class="text-base font-black">डिजिटल नागरिक पहचान कार्ड</h3>
+        </div>
+      </div>
+      <div class="grid grid-cols-[1fr_115px] gap-4 items-center pt-4">
+        <div class="min-w-0">
+          <div class="text-[11px] text-blue-200">नागरिक का नाम</div>
+          <h4 id="citizenCardName" class="text-xl font-black truncate">नागरिक</h4>
+          <div class="mt-2.5 space-y-1 text-xs">
+            <div><span class="text-blue-200">मोबाइल:</span> <b id="citizenCardMobile">—</b></div>
+            <div class="truncate"><span class="text-blue-200">ईमेल:</span> <b id="citizenCardEmail">—</b></div>
+            <div><span class="text-blue-200">स्थिति:</span> <b class="text-amber-300">सत्यापित सदस्य</b></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-2 text-center shadow">
+          <div id="citizenCardQR" class="min-h-[95px] flex items-center justify-center"></div>
+          <div class="text-[9px] font-black text-[#0756a8] mt-1">CITIZEN QR</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <button onclick="downloadCitizenCard()" class="py-3 rounded-2xl bg-[#0756a8] text-white font-extrabold text-sm shadow">⬇ कार्ड डाउनलोड</button>
+      <button onclick="$('citizenProfileEditor').classList.toggle('hidden')" class="py-3 rounded-2xl bg-white border border-slate-200 text-slate-800 font-extrabold text-sm">✏️ प्रोफाइल एडिट</button>
+    </div>
+    <p id="citizenCardStatus" class="text-center text-xs text-slate-500"></p>
+
+    <div id="citizenProfileEditor" class="hidden app-card space-y-3">
+      <h3 class="font-black text-base">प्रोफाइल अपडेट करें</h3>
+      <input id="portalName" class="app-input" placeholder="पूरा नाम">
+      <input id="portalMobile" class="app-input" type="tel" placeholder="मोबाइल नंबर">
+      <button onclick="savePortalProfile()" class="btn-primary">प्रोफाइल सेव करें</button>
+      <div id="portalProfileStatus" class="status-msg"></div>
+    </div>
+
+    <div class="app-card">
+      <h3 class="font-black text-base mb-3">📋 मेरी दर्ज शिकायतें</h3>
+      <div id="citizenMyComplaints" class="space-y-2.5"><p class="text-xs text-slate-500">लोड हो रहा है...</p></div>
+    </div>
+  </section>
+
+  <!-- PAGE 3: COMPLAINTS & TRACKING -->
+  <section id="suggestions" class="app-page space-y-4">
+    <div class="app-card">
+      <span class="text-xs font-extrabold text-blue-600">CITIZEN HELPDESK</span>
+      <h2 class="text-2xl font-black mt-1">शिकायत / सुझाव दर्ज करें</h2>
+      <div class="space-y-3 mt-4">
+        <input id="fbName" class="app-input" placeholder="आपका नाम">
+        <input id="fbMobile" class="app-input" type="tel" placeholder="मोबाइल नंबर">
+        <select id="fbType" class="app-input"><option>शिकायत</option><option>सुझाव</option><option>सड़क/नाली समस्या</option><option>बिजली/पानी</option></select>
+        <textarea id="fbMessage" class="app-input" rows="4" placeholder="अपनी समस्या विस्तार से लिखें..."></textarea>
+        <button id="sendFeedbackBtn" class="btn-primary">शिकायत सबमिट करें</button>
+        <div id="fbStatus" class="status-msg"></div>
+      </div>
+    </div>
+
+    <div class="app-card">
+      <h3 class="font-black text-lg">🔎 शिकायत स्टेटस ट्रैक करें</h3>
+      <div class="flex gap-2 mt-3">
+        <input id="trackComplaintId" class="app-input" placeholder="ID डालें (जैसे ROH-2026-XXXX)">
+        <button id="trackComplaintBtn" class="px-5 rounded-2xl bg-slate-900 text-white font-bold text-sm shrink-0">जांचें</button>
+      </div>
+      <div id="complaintTrackResult" class="mt-3"></div>
+    </div>
+  </section>
+
+  <!-- PAGE 4: SCHEME CHECKER -->
+  <section id="schemeChecker" class="app-page">
+    <div class="app-card space-y-3">
+      <h2 class="text-2xl font-black">🏛️ सरकारी योजना पात्रता चेकर</h2>
+      <input id="schemeAge" type="number" class="app-input" placeholder="आपकी उम्र (वर्ष)">
+      <select id="schemeFamily" class="app-input">
+        <option value="">परिवार की स्थिति चुनें</option>
+        <option value="low">कम आय वाला परिवार (BPL)</option>
+        <option value="farmer">किसान परिवार</option>
+        <option value="senior">वरिष्ठ नागरिक (60+)</option>
+        <option value="student">छात्र / छात्रा</option>
+      </select>
+      <select id="schemeRation" class="app-input"><option value="">क्या राशन कार्ड है?</option><option value="yes">हाँ</option><option value="no">नहीं</option></select>
+      <select id="schemeFarmer" class="app-input"><option value="">क्या खेती की जमीन है?</option><option value="yes">हाँ</option><option value="no">नहीं</option></select>
+      <button onclick="checkSchemes()" class="btn-primary">पात्र योजनाएं देखें</button>
+      <div id="schemeResults" class="mt-3"></div>
+    </div>
+  </section>
+
+  <!-- PAGE 5: DEVELOPMENT TRACKER -->
+  <section id="development" class="app-page space-y-4">
+    <h2 class="text-2xl font-black px-1">🏗️ पंचायत विकास कार्य</h2>
+    <div id="developmentList" class="space-y-3"><p class="text-sm text-slate-500">लोड हो रहा है...</p></div>
+  </section>
+
+  <!-- PAGE 6: SURVEY -->
+  <section id="survey" class="app-page space-y-4">
+    <h2 class="text-2xl font-black px-1">📊 जन सर्वेक्षण</h2>
+    <div id="surveyPublicList" class="space-y-4"><p class="text-sm text-slate-500">लोड हो रहा है...</p></div>
+  </section>
+
+  <!-- PAGE 7: PUBLIC REPORTS -->
+  <section id="publicReports" class="app-page space-y-4">
+    <div class="app-card space-y-3">
+      <h2 class="text-xl font-black">📝 जनता की विकास रिपोर्ट भेजें</h2>
+      <input id="prName" class="app-input" placeholder="आपका नाम">
+      <textarea id="prMessage" class="app-input" rows="3" placeholder="अपने वार्ड/गली के कार्य की रिपोर्ट लिखें..."></textarea>
+      <button onclick="submitPublicReport()" class="btn-primary">रिपोर्ट भेजें</button>
+      <div id="prStatus" class="status-msg"></div>
+    </div>
+    <h3 class="font-black text-lg px-1">स्वीकृत विकास रिपोर्ट</h3>
+    <div id="publicReportsList" class="space-y-3"></div>
+  </section>
+
+  <!-- PAGE 8: PDF DOCUMENTS -->
+  <section id="pdfs" class="app-page space-y-4">
+    <h2 class="text-2xl font-black px-1">📄 सभी PDF दस्तावेज़</h2>
+    <div id="pdfList" class="grid sm:grid-cols-2 gap-3"></div>
+  </section>
+
+  <!-- PAGE 9: MEDIA (GALLERY, VIDEO, AUDIO) -->
+  <section id="gallery" class="app-page space-y-4">
+    <h2 class="text-2xl font-black px-1">🖼️ फोटो गैलरी</h2>
+    <div id="photoGallery" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+  </section>
+
+  <section id="videoGallery" class="app-page space-y-4">
+    <h2 class="text-2xl font-black px-1">🎥 वीडियो गैलरी</h2>
+    <div id="videoList" class="space-y-4"></div>
+  </section>
+
+  <section id="musicPlayer" class="app-page space-y-4">
+    <h2 class="text-2xl font-black px-1">🎵 पंचायत ऑडियो / गाना</h2>
+    <div id="audioList" class="space-y-3"></div>
+  </section>
+
+  <!-- PAGE 10: ABOUT & UPDATES & NOTIFICATIONS -->
+  <section id="about" class="app-page space-y-4">
+    <div class="app-card space-y-3">
+      <h2 id="aboutHeading" class="text-2xl font-black">पंचायत परिचय</h2>
+      <p id="aboutSubheading" class="text-blue-600 font-bold text-sm"></p>
+      <p id="aboutText" class="text-sm text-slate-600 leading-relaxed whitespace-pre-line"></p>
+      <h3 id="aboutEducationHeading" class="font-black text-base pt-2"></h3>
+      <p id="aboutEducation" class="text-sm text-slate-600 whitespace-pre-line"></p>
+      <h3 id="aboutWorkHeading" class="font-black text-base pt-2"></h3>
+      <p id="aboutWork" class="text-sm text-slate-600 whitespace-pre-line"></p>
+      <h3 id="aboutVisionHeading" class="font-black text-base pt-2"></h3>
+      <p id="aboutVision" class="text-sm text-slate-600 whitespace-pre-line"></p>
+      <blockquote id="aboutQuote" class="p-3 bg-blue-50 border-l-4 border-blue-600 font-bold text-sm text-blue-900"></blockquote>
+    </div>
+  </section>
+
+  <section id="updates" class="app-page space-y-4">
+    <h2 class="text-2xl font-black px-1">🆕 ताज़ा अपडेट (New Updates)</h2>
+    <div id="newUpdatesContent" class="space-y-3"></div>
+  </section>
+
+  <section id="notificationsPage" class="app-page space-y-4">
+    <h2 class="text-2xl font-black px-1">🔔 पंचायत सूचनाएं</h2>
+    <div id="citizenNotifications" class="space-y-3"></div>
+  </section>
+
+  <!-- PAGE 11: ADMIN MASTER DASHBOARD -->
+  <section id="adminDashboard" class="app-page space-y-5">
+    <div class="app-card bg-slate-900 text-white flex justify-between items-center">
+      <div>
+        <div class="text-amber-400 text-xs font-extrabold">ADMIN CONTROL PANEL</div>
+        <h2 class="text-xl font-black">मास्टर डैशबोर्ड</h2>
+      </div>
+      <button onclick="logoutApp()" class="px-4 py-2 rounded-xl bg-red-600 text-white font-bold text-xs">Logout</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="app-card text-center"><div class="text-xs text-slate-500">शिकायतें</div><b id="analyticsComplaints" class="text-xl text-blue-700">0</b></div>
+      <div class="app-card text-center"><div class="text-xs text-slate-500">रिपोर्ट</div><b id="analyticsReports" class="text-xl text-emerald-700">0</b></div>
+      <div class="app-card text-center"><div class="text-xs text-slate-500">सर्वेक्षण</div><b id="analyticsSurveys" class="text-xl text-purple-700">0</b></div>
+      <div class="app-card text-center"><div class="text-xs text-slate-500">विज़िटर्स</div><b id="analyticsVisitors" class="text-xl text-amber-600">0</b></div>
+    </div>
+
+    <!-- Push Notification -->
+    <div class="app-card space-y-3">
+      <h3 class="font-black text-base">📢 नागरिकों को सूचना भेजें</h3>
+      <input id="adminNoticeTitle" class="app-input" placeholder="सूचना शीर्षक">
+      <textarea id="adminNoticeText" class="app-input" rows="2" placeholder="संदेश लिखें..."></textarea>
+      <button onclick="publishPortalNotice()" class="btn-primary">सूचना प्रकाशित करें</button>
+      <div id="portalNoticeAdminList" class="space-y-2 pt-2"></div>
+    </div>
+
+    <!-- Main Content Editor -->
+    <div class="app-card space-y-3">
+      <h3 class="font-black text-base">⚙️ मुख्य वेबसाइट सेटिंग्स</h3>
+      <textarea id="editShayari" class="app-input" rows="2" placeholder="मुख्य शायरी / संदेश"></textarea>
+      <input id="editEvent" class="app-input" placeholder="आगामी कार्यक्रम">
+      <input id="editNotice" class="app-input" placeholder="चलती हुई पट्टी (Notice)">
+      <input id="editPopup" class="app-input" placeholder="पॉपअप संदेश">
+      <input id="editPhotoUrl" class="app-input" placeholder="मुखिया जी फोटो URL">
+      <textarea id="editAbout" class="app-input" rows="3" placeholder="पंचायत परिचय"></textarea>
+      <input id="aboutHeadingEdit" class="app-input" placeholder="परिचय शीर्षक">
+      <input id="aboutSubheadingEdit" class="app-input" placeholder="उपशीर्षक">
+      <input id="aboutEducationHeadingEdit" class="app-input" placeholder="शिक्षा शीर्षक">
+      <textarea id="aboutEducationEdit" class="app-input" rows="2" placeholder="शिक्षा विवरण"></textarea>
+      <input id="aboutWorkHeadingEdit" class="app-input" placeholder="कार्य शीर्षक">
+      <textarea id="aboutWorkEdit" class="app-input" rows="2" placeholder="कार्य विवरण"></textarea>
+      <input id="aboutVisionHeadingEdit" class="app-input" placeholder="लक्ष्य शीर्षक">
+      <textarea id="aboutVisionEdit" class="app-input" rows="2" placeholder="लक्ष्य विवरण"></textarea>
+      <input id="aboutQuoteEdit" class="app-input" placeholder="विशेष उद्धरण">
+
+      <details class="border rounded-xl p-3 bg-slate-50">
+        <summary class="font-black text-sm cursor-pointer">📄 20 PDF दस्तावेज़ जोड़ें</summary>
+        <div id="adminPdfFields" class="space-y-2 mt-3"></div>
+      </details>
+
+      <details class="border rounded-xl p-3 bg-slate-50">
+        <summary class="font-black text-sm cursor-pointer">🖼️ 20 फोटो गैलरी जोड़ें</summary>
+        <div id="adminGalleryFields" class="grid grid-cols-2 gap-2 mt-3"></div>
+      </details>
+
+      <details class="border rounded-xl p-3 bg-slate-50">
+        <summary class="font-black text-sm cursor-pointer">🎵 20 ऑडियो गाने जोड़ें</summary>
+        <div id="adminAudioFields" class="space-y-2 mt-3"></div>
+      </details>
+
+      <details class="border rounded-xl p-3 bg-slate-50">
+        <summary class="font-black text-sm cursor-pointer">🎬 10 वीडियो जोड़ें</summary>
+        <div id="adminVideoFields" class="space-y-2 mt-3"></div>
+      </details>
+
+      <button id="saveBtn" class="btn-primary">💾 सभी बदलाव Save करें</button>
+      <div id="saveStatus" class="status-msg"></div>
+    </div>
+
+    <!-- Development Work Manager -->
+    <div class="app-card space-y-3">
+      <h3 class="font-black text-base">🏗️ विकास कार्य जोड़ें</h3>
+      <input id="devTitle" class="app-input" placeholder="कार्य का नाम">
+      <textarea id="devDesc" class="app-input" rows="2" placeholder="विवरण"></textarea>
+      <input id="devPhoto" class="app-input" placeholder="फोटो URL">
+      <select id="devStatus" class="app-input"><option>काम जारी</option><option>पूरा हुआ</option><option>प्रस्तावित</option></select>
+      <button onclick="addDevelopment()" class="w-full py-3 rounded-xl bg-emerald-600 text-white font-extrabold text-sm">विकास कार्य जोड़ें</button>
+      <div id="devAdminList" class="space-y-2 pt-2"></div>
+    </div>
+
+    <!-- Survey Manager -->
+    <div class="app-card space-y-3">
+      <h3 class="font-black text-base">📊 नया सर्वेक्षण बनाएं</h3>
+      <input id="surveyQuestion" class="app-input" placeholder="प्रश्न">
+      <textarea id="surveyOptions" class="app-input" rows="3" placeholder="विकल्प (हर लाइन में एक)"></textarea>
+      <button onclick="addSurvey()" class="btn-primary">सर्वेक्षण जोड़ें</button>
+      <div id="surveyAdminList" class="space-y-2 pt-2"></div>
+    </div>
+
+    <!-- Public Reports Approval -->
+    <div class="app-card space-y-3">
+      <h3 class="font-black text-base">📝 जनता विकास रिपोर्ट Approval</h3>
+      <div id="publicReportsAdminList" class="space-y-2"></div>
+    </div>
+
+    <!-- Citizen Complaints -->
+    <div class="app-card space-y-3">
+      <h3 class="font-black text-base">💬 नागरिकों की शिकायतें</h3>
+      <div id="feedbackList" class="space-y-3"></div>
+    </div>
+
+    <!-- Registered Users -->
+    <div class="app-card space-y-3">
+      <h3 class="font-black text-base">👥 पंजीकृत नागरिक (<span id="adminUsersCount">0</span>)</h3>
+      <input id="userAdminSearch" class="app-input" placeholder="नाम या मोबाइल खोजें..." oninput="filterAdminUsers()">
+      <div id="adminUsersList" class="space-y-2"></div>
+    </div>
+  </section>
+
+  <!-- Fixed Bottom App Tab Bar -->
+  <nav class="bottom-nav" id="bottomNav">
+    <button onclick="openAppPage('home')" class="nav-tab active" data-tab="home"><i class="fa-solid fa-house"></i><span>होम</span></button>
+    <button onclick="openAppPage('suggestions')" class="nav-tab" data-tab="suggestions"><i class="fa-solid fa-comment-medical"></i><span>शिकायत</span></button>
+    <button onclick="openAppPage('pdfs')" class="nav-tab" data-tab="pdfs"><i class="fa-solid fa-file-pdf"></i><span>PDF</span></button>
+    <button onclick="openAppPage('development')" class="nav-tab" data-tab="development"><i class="fa-solid fa-road"></i><span>विकास</span></button>
+    <button onclick="openAppPage('userPortal')" class="nav-tab" data-tab="userPortal"><i class="fa-solid fa-id-card"></i><span>मेरा कार्ड</span></button>
+  </nav>
+</div>
+
+<!-- Floating AI Button -->
+<button onclick="toggleAI()" class="ai-fab" aria-label="AI Assistant">🤖</button>
+
+<!-- AI Chat Modal -->
+<div id="aiBox" class="modal" onclick="if(event.target===this)toggleAI()">
+  <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+    <div class="bg-[#0756a8] text-white p-4 flex justify-between items-center font-black">
+      <span>🤖 पंचायत AI सहायक</span>
+      <button onclick="toggleAI()" class="w-8 h-8 rounded-full bg-white/20">✕</button>
+    </div>
+    <div id="aiChat" class="p-4 h-72 overflow-y-auto bg-slate-50">
+      <div class="chat-bubble bg-blue-100 text-blue-900">नमस्ते 🙏 मैं रोह पंचायत AI सहायक हूँ। आप योजना, शिकायत, संपर्क या विकास कार्यों के बारे में पूछ सकते हैं।</div>
+    </div>
+    <div class="p-3 border-t flex gap-2">
+      <input id="aiInput" class="app-input" placeholder="सवाल लिखें..." onkeydown="if(event.key==='Enter')askAI()">
+      <button onclick="askAI()" class="px-5 rounded-2xl bg-[#0756a8] text-white font-bold">भेजें</button>
+    </div>
+  </div>
+</div>
+
+<!-- Image Lightbox Modal -->
+<div id="imageModal" class="modal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="relative max-w-lg w-full text-center">
+    <img id="modalImage" src="" class="rounded-2xl max-h-[75vh] mx-auto shadow-2xl">
+    <p id="modalCaption" class="text-white font-bold mt-3 text-sm"></p>
+  </div>
+</div>
+
+<!-- Popup Modal -->
+<div id="popup" class="modal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
+    <div class="text-4xl">📢</div>
+    <h3 class="text-xl font-black mt-2">विशेष सूचना</h3>
+    <p id="popupText" class="text-slate-600 font-semibold text-sm mt-2"></p>
+    <button onclick="$('popup').classList.remove('show')" class="btn-primary mt-5">ठीक है</button>
+  </div>
+</div>
+
+<!-- PWA Manifest & Service Worker Setup -->
+<script>
+(function initPWA(){
+  const manifest={
+    name:"रोह पंचायत App",
+    short_name:"रोह पंचायत",
+    start_url:location.href.split('#')[0],
+    display:"standalone",
+    background_color:"#052c59",
+    theme_color:"#0756a8",
+    icons:[{
+      src:"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='115' fill='%230756a8'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='900' font-size='210' fill='white'>रोह</text></svg>",
+      sizes:"512x512",type:"image/svg+xml"
+    }]
+  };
+  document.getElementById('pwaManifest').href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/json'}));
+
+  let deferredPrompt=null;
+  window.addEventListener('beforeinstallprompt',e=>{
+    e.preventDefault();deferredPrompt=e;
+    document.getElementById('installAppBtn')?.classList.remove('hidden');
+  });
+  window.installPWA=async()=>{
+    if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;}
+    else alert('ब्राउज़र के ऊपर दायें कोने (⋮) पर क्लिक करके "Add to Home Screen / Install App" चुनें।');
+  };
+})();
+</script>
+
+<!-- Firebase & App Core Logic -->
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+import {getDatabase,ref,set,get,onValue,push,remove,update,runTransaction} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+import {getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+const firebaseConfig={
+  apiKey:'AIzaSyC7RoapoxY0nDoSsfa5mUGzEbaKFLmDQ4Y',
+  authDomain:'rohpanchayat.firebaseapp.com',
+  databaseURL:'https://rohpanchayat-default-rtdb.firebaseio.com',
+  projectId:'rohpanchayat',
+  storageBucket:'rohpanchayat.firebasestorage.app',
+  messagingSenderId:'122020322885',
+  appId:'1:122020322885:web:a0f88c60f6bec087d64d2c'
+};
+
+const app=initializeApp(firebaseConfig),db=getDatabase(app),auth=getAuth(app);
+const ADMIN_UID='GYWE7KBlHjYxJ2PnTEERECesVES2';
+const defaultPDFName='2025-EROLLGEN-S04-238-SIR-FinalRoll-Revision1-HIN-43-WI.pdf';
+const defaultPDFUrl='https://mgleamnzydsnciozrfye.supabase.co/storage/v1/object/sign/gfgfg/2025-EROLLGEN-S04-238-SIR-FinalRoll-Revision1-HIN-43-WI.pdf?token=eyJraWQiOiIyZmY2NDAyNC0xZGMxLTQ2ZmYtYThlNy03NDg3MjQ4NTZlZmUiLCJhbGciOiJIUzUxMiJ9.eyJ1cmwiOiJnZmdmZy8yMDI1LUVST0xMR0VOLVMwNC0yMzgtU0lSLUZpbmFsUm9sbC1SZXZpc2lvbjEtSElOLTQzLVdJLnBkZiIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODk0NTI4OTIsImV4cCI6MTgyMDk4ODg5Mn0.7LmFafKK1grWoudoAyOf6Sajh8XE6Ce-elOrRTCEJRnHGvj_P3UVF_rO23rLNVC2awHFQizTHyU742a9lHM_qg';
+
+window.$=id=>document.getElementById(id);
+const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+
+// Navigation & Auth Screen Switchers
+window.switchAuthScreen=id=>{
+  document.querySelectorAll('.auth-screen').forEach(s=>s.classList.remove('active'));
+  $(id)?.classList.add('active');
+};
+window.openAdminScreen=role=>{
+  $('adminLoginHeading').innerText=role+' लॉगिन';
+  switchAuthScreen('screenAdminLogin');
+};
+window.openAppPage=id=>{
+  if(!auth.currentUser)return;
+  document.querySelectorAll('.app-page').forEach(p=>p.classList.remove('active'));
+  $(id)?.classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+
+// Build Admin Fields dynamically
+(function buildAdminInputs(){
+  let pdfH='',galH='',audH='',vidH='';
+  for(let i=1;i<=20;i++){
+    pdfH+=`<div class="grid grid-cols-2 gap-2"><input id="pdfName${i}" class="app-input py-2 text-xs" placeholder="PDF ${i} नाम"><input id="pdfUrl${i}" class="app-input py-2 text-xs" placeholder="PDF ${i} URL"></div>`;
+    galH+=`<input id="g${i}" class="app-input py-2 text-xs" placeholder="Photo ${i} URL">`;
+    audH+=`<div class="grid grid-cols-2 gap-2"><input id="audioName${i}" class="app-input py-2 text-xs" placeholder="Audio ${i} नाम"><input id="audioUrl${i}" class="app-input py-2 text-xs" placeholder="Audio ${i} URL"></div>`;
+  }
+  for(let i=1;i<=10;i++) vidH+=`<div class="grid grid-cols-2 gap-2"><input id="videoName${i}" class="app-input py-2 text-xs" placeholder="Video ${i} नाम"><input id="videoUrl${i}" class="app-input py-2 text-xs" placeholder="Video ${i} URL"></div>`;
+  $('adminPdfFields').innerHTML=pdfH;
+  $('adminGalleryFields').innerHTML=galH;
+  $('adminAudioFields').innerHTML=audH;
+  $('adminVideoFields').innerHTML=vidH;
+})();
+
+// Auth State Observer (Core App Lock Controller)
+onAuthStateChanged(auth,async user=>{
+  if(user){
+    document.body.classList.remove('auth-locked');
+    if(user.uid===ADMIN_UID){
+      $('topUserGreeting').innerText='Admin Mode';
+      openAppPage('adminDashboard');
+      loadAdminData();
+    }else{
+      let profile={};
+      try{const s=await get(ref(db,'users/'+user.uid));if(s.exists())profile=s.val()||{};}catch(e){}
+      const name=profile.name||user.email.split('@')[0];
+      $('topUserGreeting').innerText='नमस्ते, '+name;
+      setupCitizenCard(user,profile);
+      openAppPage('home');
+    }
+  }else{
+    document.body.classList.add('auth-locked');
+    switchAuthScreen('screenChooser');
+  }
+  setTimeout(()=>$('appSplash').classList.add('hide'),450);
+});
+
+// Login / Register / Logout Actions
+window.handleUserLogin=async()=>{
+  const email=$('userEmail').value.trim(),pass=$('userPassword').value,st=$('userLoginStatus');
+  if(!email||!pass){st.className='status-msg show bg-red-50 text-red-600';st.innerText='ईमेल और पासवर्ड दोनों भरें।';return;}
+  st.className='status-msg show bg-blue-50 text-blue-700';st.innerText='⏳ लॉगिन हो रहा है...';
+  try{await signInWithEmailAndPassword(auth,email,pass);}
+  catch(e){st.className='status-msg show bg-red-50 text-red-600';st.innerText='गलत ईमेल या पासवर्ड। कृपया पुनः जांचें।';}
+};
+
+window.handleRegister=async()=>{
+  const name=$('regName').value.trim(),mobile=$('regMobile').value.trim(),email=$('regEmail').value.trim(),pass=$('regPassword').value,st=$('registerStatus');
+  if(!name||!email||pass.length<6){st.className='status-msg show bg-red-50 text-red-600';st.innerText='नाम, ईमेल और कम से कम 6 अक्षर का पासवर्ड भरें।';return;}
+  st.className='status-msg show bg-blue-50 text-blue-700';st.innerText='⏳ अकाउंट बन रहा है...';
+  try{
+    const cred=await createUserWithEmailAndPassword(auth,email,pass);
+    await set(ref(db,'users/'+cred.user.uid),{name,mobile,email,createdAt:new Date().toISOString()});
+  }catch(e){st.className='status-msg show bg-red-50 text-red-600';st.innerText='त्रुटि: '+e.code;}
+};
+
+window.handleAdminLogin=async()=>{
+  const email=$('userInput').value.trim(),pass=$('passInput').value,st=$('loginStatus');
+  try{
+    const cred=await signInWithEmailAndPassword(auth,email,pass);
+    if(cred.user.uid!==ADMIN_UID){await signOut(auth);throw new Error('Not Admin');}
+  }catch(e){st.className='status-msg show bg-red-50 text-red-600';st.innerText='एडमिन लॉगिन विफल। कृपया सही विवरण डालें।';}
+};
+
+window.resetUserPassword=async()=>{
+  const email=$('userEmail').value.trim(),st=$('userLoginStatus');
+  if(!email){st.className='status-msg show bg-red-50 text-red-600';st.innerText='पहले ईमेल लिखें।';return;}
+  try{await sendPasswordResetEmail(auth,email);st.className='status-msg show bg-emerald-50 text-emerald-700';st.innerText='✅ पासवर्ड रीसेट लिंक ईमेल पर भेज दिया गया है।';}
+  catch(e){st.className='status-msg show bg-red-50 text-red-600';st.innerText='ईमेल नहीं मिला।';}
+};
+
+window.logoutApp=()=>signOut(auth);
+
+// Citizen Card & Profile
+function setupCitizenCard(user,profile){
+  const name=profile.name||user.email.split('@')[0],mobile=profile.mobile||'';
+  $('citizenCardName').innerText=name;
+  $('citizenCardMobile').innerText=mobile||'अपडेट करें';
+  $('citizenCardEmail').innerText=user.email;
+  $('portalName').value=profile.name||'';
+  $('portalMobile').value=mobile;
+  $('citizenCardQR').innerHTML='';
+  if(window.QRCode) new QRCode($('citizenCardQR'),{text:JSON.stringify({app:'Roh Panchayat',name,mobile,uid:user.uid}),width:95,height:95,colorDark:'#052954',colorLight:'#ffffff'});
+  onValue(ref(db,'feedback/'),s=>{
+    const list=Object.values(s.val()||{}).filter(x=>x.uid===user.uid);
+    $('citizenMyComplaints').innerHTML=list.length?list.reverse().map(c=>`<div class="p-3 rounded-xl bg-slate-50 border text-xs"><div class="flex justify-between font-black"><span>${safe(c.complaintId)}</span><span class="text-blue-600">${safe(c.status)}</span></div><p class="mt-1 text-slate-600">${safe(c.message)}</p></div>`).join(''):'<p class="text-xs text-slate-400">कोई शिकायत दर्ज नहीं है।</p>';
+  });
+}
+
+window.savePortalProfile=async()=>{
+  const u=auth.currentUser,name=$('portalName').value.trim(),mobile=$('portalMobile').value.trim(),st=$('portalProfileStatus');
+  if(!u||!name)return;
+  await update(ref(db,'users/'+u.uid),{name,mobile});
+  $('citizenCardName').innerText=name;$('citizenCardMobile').innerText=mobile||'—';
+  st.className='status-msg show bg-emerald-50 text-emerald-700';st.innerText='✅ प्रोफाइल अपडेट हो गई।';
+};
+
+window.downloadCitizenCard=async()=>{
+  const st=$('citizenCardStatus');st.innerText='कार्ड तैयार हो रहा है...';
+  const canvas=await html2canvas($('downloadableCitizenCard'),{scale:2,useCORS:true});
+  const a=document.createElement('a');a.download='Roh_Panchayat_ID_Card.png';a.href=canvas.toDataURL();a.click();
+  st.innerText='✅ कार्ड डाउनलोड हो गया!';
+};
+
+// Load Content Data
+onValue(ref(db,'content/'),s=>{
+  const d=s.val()||{};
+  $('mainShayari').innerText=d.shayari||'रोह पंचायत का सम्मान, दिपु मेहता का अभिमान।';
+  $('mainEvent').innerText=d.event||'जल्द अपडेट होगा।';
+  $('mainNotice').innerText='📢 '+(d.notice||'मतदाता सूची एवं PACS सूची पोर्टल पर उपलब्ध है।');
+  if(d.photoUrl){$('profilePic').src=d.photoUrl;$('profilePic').classList.remove('hidden');$('defaultIcon').classList.add('hidden');}
+
+  // About
+  $('aboutHeading').innerText=d.aboutHeading||'पंचायत परिचय';
+  $('aboutSubheading').innerText=d.aboutSubheading||'';
+  $('aboutText').innerText=d.about||'रोह पंचायत के सर्वांगीण विकास के लिए समर्पित डिजिटल मंच।';
+  $('aboutEducationHeading').innerText=d.aboutEducationHeading||'';$('aboutEducation').innerText=d.aboutEducation||'';
+  $('aboutWorkHeading').innerText=d.aboutWorkHeading||'';$('aboutWork').innerText=d.aboutWork||'';
+  $('aboutVisionHeading').innerText=d.aboutVisionHeading||'';$('aboutVision').innerText=d.aboutVision||'';
+  $('aboutQuote').innerText=d.aboutQuote||'सशक्त रोह • समृद्ध रोह';
+
+  // PDFs
+  const pdfData={...d,pdfName1:d.pdfName1||defaultPDFName,pdfUrl1:d.pdfUrl1||defaultPDFUrl};
+  let pdfHtml='';
+  for(let i=1;i<=20;i++){
+    if(pdfData['pdfName'+i]&&pdfData['pdfUrl'+i]){
+      pdfHtml+=`<div class="app-card flex flex-col justify-between gap-3"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 grid place-items-center shrink-0"><i class="fa-solid fa-file-pdf"></i></div><b class="text-sm break-all">${safe(pdfData['pdfName'+i])}</b></div><div class="grid grid-cols-2 gap-2"><a href="${safe(pdfData['pdfUrl'+i])}" target="_blank" class="py-2 rounded-xl bg-blue-600 text-white text-center text-xs font-bold">देखें</a><a href="${safe(pdfData['pdfUrl'+i])}" download class="py-2 rounded-xl bg-emerald-600 text-white text-center text-xs font-bold">Download</a></div></div>`;
+    }
+  }
+  $('pdfList').innerHTML=pdfHtml||'<p class="text-sm text-slate-500">कोई PDF उपलब्ध नहीं है।</p>';
+
+  // Gallery
+  let galHtml='';
+  for(let i=1;i<=20;i++) if(d['g'+i]) galHtml+=`<img src="${safe(d['g'+i])}" class="gallery-img" onclick="openImg('${safe(d['g'+i])}')">`;
+  $('photoGallery').innerHTML=galHtml||'<p class="col-span-full text-sm text-slate-500">कोई फोटो उपलब्ध नहीं है।</p>';
+
+  // Audio & Video
+  let audHtml='',vidHtml='';
+  for(let i=1;i<=20;i++) if(d['audioUrl'+i]) audHtml+=`<div class="app-card"><b class="text-sm">${safe(d['audioName'+i]||'ऑडियो '+i)}</b><audio controls class="w-full mt-2"><source src="${safe(d['audioUrl'+i])}"></audio></div>`;
+  for(let i=1;i<=10;i++) if(d['videoUrl'+i]) vidHtml+=`<div class="app-card"><b class="text-sm">${safe(d['videoName'+i]||'वीडियो '+i)}</b><video controls playsinline class="w-full rounded-xl mt-2 bg-black"><source src="${safe(d['videoUrl'+i])}"></video></div>`;
+  $('audioList').innerHTML=audHtml||'<p class="text-sm text-slate-500">कोई ऑडियो नहीं है।</p>';
+  $('videoList').innerHTML=vidHtml||'<p class="text-sm text-slate-500">कोई वीडियो नहीं है।</p>';
+
+  // Team
+  let teamHtml='';
+  [1,2,3].forEach(i=>{
+    const m=d['team'+i];
+    if(m&&m.name) teamHtml+=`<div class="p-4 rounded-2xl bg-slate-50 border text-center"><img src="${safe(m.photo)}" class="w-16 h-16 rounded-full object-cover mx-auto border-2 border-blue-200"><div class="text-[11px] font-bold text-blue-600 mt-2">${safe(m.role||'सदस्य')}</div><b class="text-sm">${safe(m.name)}</b></div>`;
+  });
+  $('teamContainer').innerHTML=teamHtml;
+
+  // Fill Admin Inputs
+  if($('editShayari')){
+    $('editShayari').value=d.shayari||'';$('editEvent').value=d.event||'';$('editNotice').value=d.notice||'';$('editPopup').value=d.popup||'';
+    $('editPhotoUrl').value=d.photoUrl||'';$('editAbout').value=d.about||'';$('aboutHeadingEdit').value=d.aboutHeading||'';
+    $('aboutSubheadingEdit').value=d.aboutSubheading||'';$('aboutEducationHeadingEdit').value=d.aboutEducationHeading||'';
+    $('aboutEducationEdit').value=d.aboutEducation||'';$('aboutWorkHeadingEdit').value=d.aboutWorkHeading||'';
+    $('aboutWorkEdit').value=d.aboutWork||'';$('aboutVisionHeadingEdit').value=d.aboutVisionHeading||'';
+    $('aboutVisionEdit').value=d.aboutVision||'';$('aboutQuoteEdit').value=d.aboutQuote||'';
+    for(let i=1;i<=20;i++){
+      if($('pdfName'+i))$('pdfName'+i).value=pdfData['pdfName'+i]||'';
+      if($('pdfUrl'+i))$('pdfUrl'+i).value=pdfData['pdfUrl'+i]||'';
+      if($('g'+i))$('g'+i).value=d['g'+i]||'';
+      if($('audioName'+i))$('audioName'+i).value=d['audioName'+i]||'';
+      if($('audioUrl'+i))$('audioUrl'+i).value=d['audioUrl'+i]||'';
+    }
+    for(let i=1;i<=10;i++){
+      if($('videoName'+i))$('videoName'+i).value=d['videoName'+i]||'';
+      if($('videoUrl'+i))$('videoUrl'+i).value=d['videoUrl'+i]||'';
+    }
+  }
+  if(d.popup&&auth.currentUser){$('popupText').innerText=d.popup;$('popup').classList.add('show');}
+});
+
+// Complaints, Tracking, Votes
+$('sendFeedbackBtn').onclick=async()=>{
+  const msg=$('fbMessage').value.trim(),st=$('fbStatus');
+  if(!msg){st.className='status-msg show bg-red-50 text-red-600';st.innerText='कृपया समस्या लिखें।';return;}
+  const id='ROH-'+new Date().getFullYear()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
+  await push(ref(db,'feedback/'),{complaintId:id,name:$('fbName').value.trim()||'नागरिक',mobile:$('fbMobile').value.trim(),type:$('fbType').value,message:msg,status:'प्राप्त',time:new Date().toLocaleString('hi-IN'),uid:auth.currentUser?.uid||''});
+  await set(ref(db,'complaintStatus/'+id),{complaintId:id,status:'प्राप्त',type:$('fbType').value,time:new Date().toLocaleString('hi-IN')});
+  $('fbMessage').value='';$('trackComplaintId').value=id;
+  st.className='status-msg show bg-emerald-50 text-emerald-700';st.innerHTML=`✅ शिकायत दर्ज हो गई! आपकी ID: <b>${id}</b>`;
+};
+
+$('trackComplaintBtn').onclick=async()=>{
+  const id=$('trackComplaintId').value.trim().toUpperCase(),out=$('complaintTrackResult');
+  if(!id)return;
+  const snap=await get(ref(db,'complaintStatus/'+id));
+  out.innerHTML=snap.exists()?`<div class="p-3 rounded-xl bg-blue-50 border border-blue-200 text-sm"><b>ID:</b> ${safe(id)}<br><b>स्थिति:</b> <span class="text-blue-700 font-black">${safe(snap.val().status)}</span></div>`:'<p class="text-xs text-red-600 font-bold">यह ID नहीं मिली।</p>';
+};
+
+const voteRef=ref(db,'votes/count');
+onValue(voteRef,s=>$('voteCount').innerText='Total Support: '+(s.val()||0));
+window.vote=async()=>{
+  if(localStorage.getItem('roh_voted')){alert('आप पहले ही समर्थन दे चुके हैं 👍');return;}
+  await runTransaction(voteRef,n=>(n||0)+1);
+  localStorage.setItem('roh_voted','1');
+  alert('धन्यवाद! आपका समर्थन दर्ज हो गया 👍');
+};
+
+// Schemes, Development, Surveys, Public Reports
+window.checkSchemes=()=>{
+  const age=Number($('schemeAge').value),fam=$('schemeFamily').value,rat=$('schemeRation').value,far=$('schemeFarmer').value;
+  let res=[];
+  if(age>=60)res.push('वृद्धावस्था पेंशन योजना');
+  if(fam==='low'||rat==='yes')res.push('खाद्य सुरक्षा / राशन योजना');
+  if(far==='yes'||fam==='farmer')res.push('PM-KISAN सम्मान निधि');
+  if(fam==='student')res.push('मुख्यमंत्री छात्रवृत्ति योजना');
+  if(fam==='low')res.push('प्रधानमंत्री आवास योजना');
+  $('schemeResults').innerHTML=`<div class="p-4 rounded-2xl bg-blue-50 text-sm"><b class="text-blue-900">संभावित योजनाएं:</b><ul class="list-disc pl-5 mt-2 space-y-1">${(res.length?res:['जानकारी भरकर पुनः जांचें']).map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
+};
+
+onValue(ref(db,'content/development/'),s=>{
+  const d=s.val();
+  $('developmentList').innerHTML=d?Object.values(d).reverse().map(x=>`<div class="app-card"><span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-700">${safe(x.status)}</span><h3 class="font-black text-base mt-2">${safe(x.title)}</h3><p class="text-xs text-slate-600 mt-1">${safe(x.desc)}</p>${x.photo?`<img src="${safe(x.photo)}" class="rounded-xl mt-3 max-h-48 w-full object-cover">`:''}</div>`).join(''):'<p class="text-sm text-slate-500">कोई कार्य दर्ज नहीं है।</p>';
+  if($('devAdminList'))$('devAdminList').innerHTML=d?Object.entries(d).reverse().map(([id,x])=>`<div class="p-2.5 border rounded-xl flex justify-between text-xs"><b>${safe(x.title)}</b><button onclick="removeDev('${id}')" class="text-red-600 font-bold">हटाएं</button></div>`).join(''):'';
+});
+window.addDevelopment=async()=>{
+  const title=$('devTitle').value.trim();if(!title)return;
+  await push(ref(db,'content/development/'),{title,desc:$('devDesc').value.trim(),photo:$('devPhoto').value.trim(),status:$('devStatus').value});
+  $('devTitle').value='';$('devDesc').value='';$('devPhoto').value='';
+};
+window.removeDev=id=>remove(ref(db,'content/development/'+id));
+
+onValue(ref(db,'content/surveys/'),s=>{
+  const d=s.val();
+  $('surveyPublicList').innerHTML=d?Object.entries(d).reverse().map(([id,sv])=>`<div class="app-card"><h3 class="font-black text-base">${safe(sv.question)}</h3><div class="space-y-2 mt-3">${(sv.options||[]).map((o,i)=>`<button onclick="voteSurvey('${id}',${i})" class="w-full text-left p-3 rounded-xl border hover:bg-blue-50 text-sm font-bold flex justify-between"><span>${safe(o)}</span><span class="text-blue-600">${(sv.votes&&sv.votes[i])||0} मत</span></button>`).join('')}</div></div>`).join(''):'<p class="text-sm text-slate-500">कोई सर्वेक्षण नहीं है।</p>';
+  if($('surveyAdminList'))$('surveyAdminList').innerHTML=d?Object.entries(d).reverse().map(([id,sv])=>`<div class="p-2.5 border rounded-xl flex justify-between text-xs"><b>${safe(sv.question)}</b><button onclick="removeSurvey('${id}')" class="text-red-600 font-bold">हटाएं</button></div>`).join(''):'';
+});
+window.voteSurvey=async(id,idx)=>{
+  if(localStorage.getItem('sv_'+id)){alert('आप पहले ही वोट दे चुके हैं।');return;}
+  await runTransaction(ref(db,`content/surveys/${id}/votes/${idx}`),v=>(v||0)+1);
+  localStorage.setItem('sv_'+id,'1');
+};
+window.addSurvey=async()=>{
+  const q=$('surveyQuestion').value.trim(),opts=$('surveyOptions').value.split('\n').map(x=>x.trim()).filter(Boolean);
+  if(!q||opts.length<2)return;
+  await push(ref(db,'content/surveys/'),{question:q,options:opts,votes:{}});
+  $('surveyQuestion').value='';$('surveyOptions').value='';
+};
+window.removeSurvey=id=>remove(ref(db,'content/surveys/'+id));
+
+onValue(ref(db,'content/publicReports/'),s=>{
+  const d=s.val();
+  $('publicReportsList').innerHTML=d?Object.values(d).filter(x=>x.status==='approved').reverse().map(r=>`<div class="app-card"><div class="text-xs text-slate-400">${safe(r.name||'नागरिक')} • ${safe(r.date||'')}</div><p class="text-sm mt-1">${safe(r.message)}</p></div>`).join(''):'<p class="text-sm text-slate-500">कोई रिपोर्ट नहीं।</p>';
+  if($('publicReportsAdminList'))$('publicReportsAdminList').innerHTML=d?Object.entries(d).reverse().map(([id,r])=>`<div class="p-3 border rounded-xl text-xs space-y-2"><div class="flex justify-between"><b>${safe(r.name)}</b><span class="font-bold text-blue-600">${safe(r.status)}</span></div><p>${safe(r.message)}</p><div class="flex gap-2"><button onclick="updateRep('${id}','approved')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg">Approve</button><button onclick="removeRep('${id}')" class="px-3 py-1 bg-red-600 text-white rounded-lg">Delete</button></div></div>`).join(''):'';
+});
+window.submitPublicReport=async()=>{
+  const msg=$('prMessage').value.trim(),st=$('prStatus');if(!msg)return;
+  await push(ref(db,'content/publicReports/'),{name:$('prName').value.trim()||'नागरिक',message:msg,date:new Date().toLocaleDateString('hi-IN'),status:'pending'});
+  $('prMessage').value='';st.className='status-msg show bg-emerald-50 text-emerald-700';st.innerText='✅ रिपोर्ट भेज दी गई है।';
+};
+window.updateRep=(id,status)=>update(ref(db,'content/publicReports/'+id),{status});
+window.removeRep=id=>remove(ref(db,'content/publicReports/'+id));
+
+onValue(ref(db,'portalNotifications/'),s=>{
+  const d=s.val();
+  $('citizenNotifications').innerHTML=d?Object.values(d).reverse().map(n=>`<div class="app-card"><b>${safe(n.title)}</b><p class="text-xs text-slate-600 mt-1">${safe(n.message)}</p><div class="text-[10px] text-slate-400 mt-1">${safe(n.date)}</div></div>`).join(''):'<p class="text-sm text-slate-500">कोई सूचना नहीं।</p>';
+  if($('portalNoticeAdminList'))$('portalNoticeAdminList').innerHTML=d?Object.entries(d).reverse().map(([id,n])=>`<div class="p-2.5 border rounded-xl flex justify-between text-xs"><b>${safe(n.title)}</b><button onclick="remove(ref(db,'portalNotifications/${id}'))" class="text-red-600 font-bold">हटाएं</button></div>`).join(''):'';
+});
+window.publishPortalNotice=async()=>{
+  const title=$('adminNoticeTitle').value.trim(),message=$('adminNoticeText').value.trim();if(!title||!message)return;
+  await push(ref(db,'portalNotifications/'),{title,message,date:new Date().toLocaleString('hi-IN')});
+  $('adminNoticeTitle').value='';$('adminNoticeText').value='';
+};
+
+// Admin Save & Load
+$('saveBtn').onclick=async()=>{
+  const st=$('saveStatus');st.className='status-msg show bg-blue-50 text-blue-700';st.innerText='⏳ Save हो रहा है...';
+  const data={
+    shayari:$('editShayari').value,event:$('editEvent').value,notice:$('editNotice').value,popup:$('editPopup').value,
+    photoUrl:$('editPhotoUrl').value,about:$('editAbout').value,aboutHeading:$('aboutHeadingEdit').value,
+    aboutSubheading:$('aboutSubheadingEdit').value,aboutEducationHeading:$('aboutEducationHeadingEdit').value,
+    aboutEducation:$('aboutEducationEdit').value,aboutWorkHeading:$('aboutWorkHeadingEdit').value,
+    aboutWork:$('aboutWorkEdit').value,aboutVisionHeading:$('aboutVisionHeadingEdit').value,
+    aboutVision:$('aboutVisionEdit').value,aboutQuote:$('aboutQuoteEdit').value
+  };
+  for(let i=1;i<=20;i++){
+    data['pdfName'+i]=$('pdfName'+i).value.trim();data['pdfUrl'+i]=$('pdfUrl'+i).value.trim();
+    data['g'+i]=$('g'+i).value.trim();
+    data['audioName'+i]=$('audioName'+i).value.trim();data['audioUrl'+i]=$('audioUrl'+i).value.trim();
+  }
+  for(let i=1;i<=10;i++){data['videoName'+i]=$('videoName'+i).value.trim();data['videoUrl'+i]=$('videoUrl'+i).value.trim();}
+  await update(ref(db,'content/'),data);
+  st.className='status-msg show bg-emerald-50 text-emerald-700';st.innerText='✅ सभी बदलाव सुरक्षित हो गए!';
+};
+
+let allUsers=[];
+function loadAdminData(){
+  onValue(ref(db,'feedback/'),s=>{
+    const d=s.val()||{};$('analyticsComplaints').innerText=Object.keys(d).length;
+    $('feedbackList').innerHTML=Object.entries(d).reverse().map(([id,f])=>`<div class="p-3 border rounded-xl text-xs space-y-2"><div class="flex justify-between"><b>${safe(f.name)} (${safe(f.complaintId)})</b><button onclick="delFb('${id}')" class="text-red-600 font-bold">Delete</button></div><p>${safe(f.message)}</p><div class="flex gap-2"><select id="st_${id}" class="border rounded-lg px-2 py-1"><option ${f.status==='प्राप्त'?'selected':''}>प्राप्त</option><option ${f.status==='जाँच जारी'?'selected':''}>जाँच जारी</option><option ${f.status==='समाधान हुआ'?'selected':''}>समाधान हुआ</option></select><button onclick="updFb('${id}','${f.complaintId}')" class="px-3 py-1 bg-blue-600 text-white rounded-lg">Update</button></div></div>`).join('');
+  });
+  onValue(ref(db,'content/publicReports/'),s=>$('analyticsReports').innerText=Object.keys(s.val()||{}).length);
+  onValue(ref(db,'content/surveys/'),s=>$('analyticsSurveys').innerText=Object.keys(s.val()||{}).length);
+  onValue(ref(db,'visitors/total'),s=>$('analyticsVisitors').innerText=s.val()||0);
+  get(ref(db,'users')).then(s=>{allUsers=Object.entries(s.val()||{}).map(([uid,u])=>({uid,...u}));$('adminUsersCount').innerText=allUsers.length;filterAdminUsers();});
+}
+window.updFb=async(id,cid)=>{const status=$('st_'+id).value;await update(ref(db,'feedback/'+id),{status});if(cid)await update(ref(db,'complaintStatus/'+cid),{status});alert('Updated!');};
+window.delFb=id=>remove(ref(db,'feedback/'+id));
+window.filterAdminUsers=()=>{
+  const q=$('userAdminSearch').value.toLowerCase();
+  $('adminUsersList').innerHTML=allUsers.filter(u=>(u.name+u.mobile+u.email).toLowerCase().includes(q)).map(u=>`<div class="p-2.5 border rounded-xl text-xs flex justify-between"><div><b>${safe(u.name)}</b><div class="text-slate-500">${safe(u.mobile)} • ${safe(u.email)}</div></div></div>`).join('');
+};
+
+// AI & Lightbox
+window.toggleAI=()=>$('aiBox').classList.toggle('show');
+window.askAI=()=>{
+  const inp=$('aiInput'),q=inp.value.trim();if(!q)return;
+  let ans='🙏 आप योजना चेकर, शिकायत दर्ज, PDF सूची या विकास कार्यों के बारे में पूछ सकते हैं।';
+  if(q.includes('संपर्क')||q.includes('फोन'))ans='📞 हेल्पलाइन नंबर: +91 7488417922';
+  else if(q.includes('शिकायत'))ans='💬 नीचे दिए गए "शिकायत" टैब पर क्लिक करके अपनी शिकायत दर्ज करें।';
+  else if(q.includes('योजना'))ans='🏛️ होम स्क्रीन पर "योजना चेकर" आइकन खोलें और अपनी जानकारी भरें।';
+  $('aiChat').insertAdjacentHTML('beforeend',`<div class="chat-bubble bg-slate-200 ml-auto">${safe(q)}</div><div class="chat-bubble bg-blue-100 text-blue-900">${ans}</div>`);
+  $('aiChat').scrollTop=$('aiChat').scrollHeight;inp.value='';
+};
+window.openImg=src=>{$('modalImage').src=src;$('imageModal').classList.add('show');};
+</script>
+</body>
+</html>
