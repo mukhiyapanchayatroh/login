@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0">
 <meta name="theme-color" content="#062f5d">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes"
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="रोह पंचायत">
 <title>रोह पंचायत | विपेन्द्र प्रसाद सिन्हा (दिपु मेहता)</title>
@@ -954,6 +954,63 @@ if(localStorage.getItem('roh_session_active')==='1'){
 </div>
 
 <!-- PWA Install Prompt -->
+  <!-- PWA Install Prompt & Installed Detection -->
+<script>
+(function(){
+  let deferredPrompt = null;
+  const btn = document.getElementById('installAppBtn');
+
+  function markAsInstalled() {
+    if (!btn) return;
+    btn.innerHTML = '✅ Installed';
+    btn.classList.remove('bg-amber-400', 'text-slate-900');
+    btn.classList.add('bg-emerald-500', 'text-white');
+    localStorage.setItem('roh_pwa_installed', '1');
+  }
+
+  // 1. अगर ऐप होम स्क्रीन से खुला है या पहले इंस्टॉल हो चुका है
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (isStandalone || localStorage.getItem('roh_pwa_installed') === '1') {
+    markAsInstalled();
+  }
+
+  // 2. इंस्टॉल प्रॉम्प्ट कैप्चर करें
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (btn && !isStandalone) {
+      btn.innerHTML = '📲 Install App';
+      btn.classList.remove('bg-emerald-500', 'text-white');
+      btn.classList.add('bg-amber-400', 'text-slate-900');
+    }
+  });
+
+  // 3. जैसे ही मोबाइल में इंस्टॉल पूरा हो (जैसा वीडियो में हुआ)
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    markAsInstalled();
+    alert('🎉 रोह पंचायत App आपके फोन में इंस्टॉल हो गया है! अब आप होम स्क्रीन आइकन से सीधे ऐप चला सकते हैं।');
+  });
+
+  // 4. बटन क्लिक हैंडलर
+  window.installPWA = async () => {
+    if (isStandalone || localStorage.getItem('roh_pwa_installed') === '1') {
+      alert('✅ रोह पंचायत App आपके फोन में पहले से इंस्टॉल हो चुका है।');
+      return;
+    }
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        markAsInstalled();
+      }
+      deferredPrompt = null;
+    } else {
+      alert('ब्राउज़र मेन्यू (⋮) में जाकर "Add to Home Screen / Install App" चुनें।');
+    }
+  };
+})();
+</script>
 <script>
 (function(){
   let deferredPrompt=null;
